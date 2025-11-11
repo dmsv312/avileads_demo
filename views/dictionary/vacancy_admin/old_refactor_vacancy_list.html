@@ -1,0 +1,119 @@
+{{ template "dictionary/base/base.html" . }}
+
+{{ define "js" }}
+<script>
+    $(document).ready(function() {
+        myFilter('vacancy',3,true);
+        myFilter('vacancy-openai',2,true);
+        $('#navVacancy').addClass('active');
+    });
+
+    function searchVacanciesFull() {
+        var input = document.getElementById("searchInputFull");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("vacancyFull");
+        var tr = table.getElementsByTagName("tr");
+        var isChecked = document.getElementById('archive').checked;
+        for (var i = 1; i < tr.length; i++) {
+            var td = tr[i].getElementsByClassName("vacancyTitle")[0];
+            if (td) {
+                var txtValue = td.textContent || td.innerText;
+                var isActive = tr[i].getAttribute("data-active") === "true";
+                if (txtValue.toUpperCase().indexOf(filter) > -1 && (!isChecked || isActive)) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+    function searchVacanciesIncomplete() {
+        var input = document.getElementById("searchInputIncomplete");
+        var filter = input.value.toUpperCase();
+        var table = document.getElementById("vacancyIncomplete");
+        var tr = table.getElementsByTagName("tr");
+        var isChecked = document.getElementById('archive').checked;
+        for (var i = 1; i < tr.length; i++) {
+            var td = tr[i].getElementsByClassName("vacancyTitle")[0];
+            if (td) {
+                var txtValue = td.textContent || td.innerText;
+                var isActive = tr[i].getAttribute("data-active") === "true";
+                if (txtValue.toUpperCase().indexOf(filter) > -1 && (!isChecked || isActive)) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
+
+</script>
+{{ end}}
+
+{{ define "content" }}
+<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
+    <h1 class="page-header">Рекламные кампании</h1>
+    {{if .flash.error}}
+        <div class="alert alert-danger" role="alert"><p style="white-space: break-spaces;">{{.flash.error}}</p></div>
+    {{end}}
+
+    {{if .flash.notice}}
+        <div class="alert alert-success" role="alert"><p>{{.flash.notice}}</p></div>
+    {{end}}
+
+    <div class="row mt-3">
+        <div class="col-md-6">
+            <h3>Текущие РК</h3>
+            <input type="text" class="form-control mb-2" onkeyup="searchVacanciesFull()" id="searchInputFull" placeholder="Поиск РК...">
+            <table class="table table-bordered" id="vacancyFull">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .records_full}}
+                <tr data-active="{{.isActive}}">
+                    <td>{{.id}}</td>
+                    <td class="vacancyTitle">{{.name}}</td>
+                    <td>
+                        <button class="btn btn-primary" type="button" onclick="location.href='/dict/vacancy_admin/edit/{{ .id  }}'">
+                            <i class="bi bi-pencil-square"></i>
+                    </td>
+                </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            <h3>Черновики РК</h3>
+            <input type="text" class="form-control mb-2" onkeyup="searchVacanciesIncomplete()" id="searchInputIncomplete" placeholder="Поиск РК...">
+            <table class="table table-bordered" id="vacancyIncomplete">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Название</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .records_incomplete}}
+                <tr data-active="{{.isActive}}">
+                    <td>{{.id}}</td>
+                    <td class="vacancyTitle">{{.name}}</td>
+                    <td>
+                        <button class="btn btn-primary" type="button" onclick="location.href='/dict/vacancy_admin/edit/{{ .id  }}'">
+                        <i class="bi bi-pencil-square"></i>
+                    </td>
+                </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{ end }}

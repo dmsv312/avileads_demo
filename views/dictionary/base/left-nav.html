@@ -1,0 +1,49 @@
+<div class="col-sm-3 col-md-2 bg-light sidebar">
+    <ul class="nav flex-column nav-sidebar nav-pills" id="leftNav">
+        {{if hasAccess "/dict/vacancy" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navVacancy" href="/dict/vacancy">Вакансии<span class="visually-hidden">(current)</span></a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/vacancy_admin" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navVacancyAdmin" href="/dict/vacancy_admin">Рекламные кампании<span class="visually-hidden">(current)</span></a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/questionnaire" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navQuest" href="/dict/questionnaire">Опросники</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/avitokeys" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navAvitoKey" href="/dict/avitokeys">Ключи Авито</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/offers/settings" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navClientOfferSettings" href="/dict/offers/settings">Настройка офферов</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/offers" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="navClientOffers" href="/dict/offers">Редактирование офферов</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/vacancy/change-group" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="changeVacancyGroup" href="/dict/vacancy/change-group">Смена групп вакансий</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/limits" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="limits" href="/dict/limits">Лимиты</a>
+        </li>
+        {{end}}
+        {{if hasAccess "/dict/dialogs-reactivations" .userRules}}
+        <li class="nav-item">
+            <a class="nav-link" id="dialogs-reactivations" href="/dict/dialogs-reactivations">Реактивации диалогов</a>
+        </li>
+        {{end}}
+    </ul>
+</div>

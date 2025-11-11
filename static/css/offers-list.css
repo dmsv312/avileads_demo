@@ -1,0 +1,33 @@
+#offersTable {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#offersTable th, #offersTable td {
+    white-space: nowrap; /* Запрет переноса */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Обрезка текста с "..." */
+}
+
+/* Дополнительно фиксируем ширину столбцов */
+#offersTable th:nth-child(1),
+#offersTable td:nth-child(1) {
+    width: 10%; /* ID */
+}
+
+#offersTable th:nth-child(2),
+#offersTable td:nth-child(2) {
+    width: 50%; /* Наименование */
+}
+
+#offersTable th:nth-child(3),
+#offersTable td:nth-child(3) {
+    width: 15%; /* Активность */
+    text-align: center;
+}
+
+#offersTable th:nth-child(4),
+#offersTable td:nth-child(4) {
+    width: 10%; /* Кнопка редактирования */
+    text-align: center;
+}

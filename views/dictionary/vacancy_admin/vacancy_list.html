@@ -1,0 +1,171 @@
+{{ template "dictionary/base/base.html" . }}
+
+{{ define "js" }}
+<script>
+    $(document).ready(function() {
+        (function () {
+            const $nameInp  = $('#searchInput');
+            const $avitoInp = $('#avitoIdInput');
+            const $form     = $('#searchForm');
+
+            function debounce(fn, delay) {
+                let timer = null;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn.apply(this, args), delay);
+                };
+            }
+
+            function trySubmit() {
+                const q  = $nameInp .val().trim();
+                const av = $avitoInp.val().trim();
+
+                if ((q.length  === 0 || q.length  >= 2) ||
+                    (av.length === 0 || av.length >= 2)) {
+                    $form.submit();
+                }
+            }
+
+            const debouncedSubmit = debounce(trySubmit, 700);
+
+            $nameInp .on('keyup', debouncedSubmit);
+            $avitoInp.on('keyup', debouncedSubmit);
+        })();
+
+        var userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        $('#timezoneInput').val(userTimeZone);
+
+        $('#navVacancyAdmin').addClass('active');
+
+        var $errorAlert = $('.alert.alert-danger');
+        if ($errorAlert.length) {
+            var $paragraph = $errorAlert.find('p');
+            if ($paragraph.length) {
+                var text = $paragraph.text();
+                var regex = /Время запуска UTC:\s*(\d{2}\.\d{2}\.\d{4}\s*\d{2}:\d{2}:\d{2})/;
+                var match = text.match(regex);
+                if (match) {
+                    var utcTimeStr = match[1];
+                    var parts = utcTimeStr.split(" ");
+                    var dateParts = parts[0].split(".");
+                    var timeParts = parts[1].split(":");
+                    var day = parseInt(dateParts[0], 10);
+                    var month = parseInt(dateParts[1], 10) - 1;
+                    var year = parseInt(dateParts[2], 10);
+                    var hours = parseInt(timeParts[0], 10);
+                    var minutes = parseInt(timeParts[1], 10);
+                    var seconds = parseInt(timeParts[2], 10);
+                    var utcDate = new Date(Date.UTC(year, month, day, hours, minutes, seconds));
+                    var options = {
+                        timeZone: userTimeZone,
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    };
+                    var localDateString = new Intl.DateTimeFormat('ru-RU', options).format(utcDate);
+                    var newText = text.replace(regex, "Время запуска: " + localDateString + ", " + userTimeZone);
+                    $paragraph.text(newText);
+                }
+            }
+        }
+    });
+
+</script>
+{{ end}}
+
+{{ define "content" }}
+<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
+    <h1 class="page-header">Рекламные кампании</h1>
+    {{if .flash.error}}
+        <div class="alert alert-danger" role="alert"><p style="white-space: break-spaces;">{{.flash.error}}</p></div>
+    {{end}}
+
+    {{if .flash.notice}}
+        <div class="alert alert-success" role="alert"><p>{{.flash.notice}}</p></div>
+    {{end}}
+
+    <div class="d-flex flex-row control-btn-container">
+        <div class="px-2">
+            <form class="d-inline-block float-end" method="post" action="/dict/vacancy/chatbotreload">
+                <input type="hidden" name="timezone" id="timezoneInput" value="">
+                <button class="btn btn-primary" type="submit">Обновить конфигурацию чат-бота</button>
+            </form>
+        </div>
+    </div>
+
+    <form id="searchForm" class="row g-2 mb-2"
+          method="get"
+          action="{{urlfor "VacancyAdminController.VacancyListAdminView"}}">
+        <input type="hidden" name="list"          value="{{.active_tab}}">
+        <input type="hidden" name="page"          value="1">
+        <input type="hidden" name="hide_archived" value="{{.hide_archived}}">
+        <div class="col-md-6">
+            <input type="text"
+                   class="form-control"
+                   name="search"
+                   id="searchInput"
+                   value="{{.search}}"
+                   placeholder="Введите название или ID РК">
+        </div>
+        <div class="col-md-6">
+            <input type="text"
+                   class="form-control"
+                   name="avitoIdSearch"
+                   id="avitoIdInput"
+                   value="{{.avitoIdSearch}}"
+                   placeholder="Введите ID Авито через запятую">
+        </div>
+    </form>
+
+    <form id="archiveForm"
+          method="get"
+          action="{{urlfor "VacancyAdminController.VacancyListAdminView"}}"
+    class="form-check mb-2">
+
+    <input type="hidden" name="list"  value="{{.active_tab}}">
+    <input type="hidden" name="page"  value="1">
+
+    <input type="checkbox" class="form-check-input"
+           id="archive" name="hide_archived" value="1"
+           {{if eq .hide_archived 1}}checked{{end}}>
+
+    <input type="hidden" name="hide_archived" value="0">
+
+    <label class="form-check-label" for="archive">Скрыть архивные</label>
+    </form>
+
+    <script>
+        document.getElementById('archive').onchange = () => archiveForm.submit();
+    </script>
+
+
+    <div class="mt-3">
+        <ul class="nav nav-tabs mb-2" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link {{if eq .active_tab "vacancy"}}active{{end}}"
+                href="?list=vacancy&page=1&hide_archived={{.hide_archived}}">
+                Стандартные рекламные кампании
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{if eq .active_tab "openai"}}active{{end}}"
+                href="?list=openai&page=1&hide_archived={{.hide_archived}}">
+                OpenAI рекламные кампании
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane fade {{if eq .active_tab "vacancy"}}show active{{end}}">
+            {{ template "dictionary/vacancy_admin/struct_vacancy_list.html" . }}
+        </div>
+        <div class="tab-pane fade {{if eq .active_tab "openai"}}show active{{end}}">
+        {{ template "dictionary/vacancy_admin/openai_vacancy_list.html" . }}
+        </div>
+    </div>
+    </div>
+</div>
+{{ end }}

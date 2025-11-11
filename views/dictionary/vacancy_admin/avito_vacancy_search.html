@@ -1,0 +1,96 @@
+{{ template "dictionary/base/base.html" . }}
+
+{{ define "js" }}
+<script>
+    $(document).ready(function() {
+        sortTable('vacancy_avito',1);
+    });
+
+    function checkboxClick(element) {
+        var xhr = new XMLHttpRequest();
+        if(element.checked) {
+        xhr.open("POST", "/dict/vacancy/add_avito");
+        } else {
+        xhr.open("POST", "/dict/vacancy/remove_avito");
+        }
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        xhr.send(JSON.stringify({ vacancy_id: {{.vacancy.Id}}, avito_id: element.id }));
+    }
+
+    $('#navVacancy').addClass('active');
+</script>
+{{ end }}
+
+{{ define "content" }}
+<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
+    <h1 class="page-header">Список вакансий для группы {{.vacancy.Name}}</h1> {{if .flash.error}}
+    <div class="alert alert-danger" role="alert">
+        <p>{{.flash.error}}</p>
+    </div>
+    {{end}} {{if .flash.notice}}
+    <div class="alert alert-success" role="alert">
+        <p>{{.flash.notice}}</p>
+    </div>
+    {{end}}
+    <input type="text" class="searchInput" onkeyup="mySeacrch('vacancy_avito',2)" id="searchInput" placeholder="Поиск Вакансии..">
+    <div class="table-responsive">
+        <table class="table" id="vacancy_avito">
+            <thead>
+              <tr>
+                <th scope="col">Выбрать</th>
+                <th scope="col">ID</th>
+                <th scope="col">Наименование</th>
+                <th scope="col">Город</th>
+                <th scope="col">Url</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range $record := .records}}
+              <tr>
+                <form class="row g-3">
+                  <input type="hidden" id="questid" name="questid" value="{{$record.Id}}">
+                  <td>
+                    <input class="form-check-input" id="{{$record.Id}}" type="checkbox" onclick='checkboxClick(this)'
+                    {{ $found := false }}
+                    {{ range $item := $.avitoIds }}
+                      {{ $avitoId := printf "%v" $record.Id }}
+                      {{ if eq $item.Avito_id $avitoId }}
+                        {{ $found = true }}
+                        {{ break }}
+                      {{ end }}
+                    {{ end }}
+                    {{if $found}}checked{{end}}>
+                  </td>
+                  <td>{{$record.Id}}</td>
+                  <td>{{$record.Title}}</td>
+                  <td>{{$record.City}}</td>
+                  <td><a href="{{$record.Url}}" target="_blank">Ссылка</a></td>
+                </form>
+              </tr>
+              {{end}}
+              {{range $record := .avitoIds}}
+              <tr>
+                <form class="row g-3">
+                  <input type="hidden" id="questid" name="questid" value="{{$record.Avito_id}}">
+                  <td>
+                    <input class="form-check-input" id="{{$record.Avito_id}}" type="checkbox" onclick='checkboxClick(this)' checked>
+                  </td>
+                  <td><span class="text-danger">{{$record.Avito_id}}</span></td>
+                  <td><span class="text-danger">Не активна</span></td>
+                  <td></td>
+                  <td></td>
+                </form>
+              </tr>
+              {{end}}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="5">
+                  <button type="button" onclick="location.href='/dict/vacancy/edit/{{.vacancy.Id}}'" class="btn btn-secondary">Вернуться к группе вакансий</button>
+                </td>
+              </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{{ end }}

@@ -1,0 +1,535 @@
+{{ template "dictionary/base/base.html" . }}
+
+{{ define "js" }}
+<script>
+    $(document).ready(function() {
+        $('#deleteOffer').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var vac2vacId = button.data('bs-whatever') // Extract info from data-* attributes
+            var modal = $(this)
+            modal.find('.modal-body input').val(vac2vacId)
+        });
+        $('#navVacancy').addClass('active');
+
+        $('textarea').on('input', function() {
+            let text = $(this).val();
+            text = text.replace(/\u2028/g, '\n');
+            $(this).val(text);
+        });
+
+        if ($("#enablePostProcessing").is(":checked")) {
+            $("#postProcessingInput").addClass("d-none").prop("disabled", true);
+            $("#postProcessingMessages").removeClass("d-none").prop("disabled", false);
+        } else {
+            $("#postProcessingInput").removeClass("d-none").prop("disabled", false);
+            $("#postProcessingMessages").addClass("d-none").prop("disabled", true);
+        }
+
+        $("#enablePostProcessing").on("change", function() {
+            if ($(this).is(":checked")) {
+                $("#postProcessingInput").addClass("d-none").prop("disabled", true);
+                $("#postProcessingMessages").removeClass("d-none").prop("disabled", false);
+            } else {
+                $("#postProcessingInput").removeClass("d-none").prop("disabled", false);
+                $("#postProcessingMessages").addClass("d-none").prop("disabled", true);
+            }
+        });
+
+        $(document).on('change', '.export-type-select', function() {
+            var offerId = $(this).data('offer-id');
+            var extraFields = $('#exportExtraFields-' + offerId);
+            var selectedVal = $(this).val();
+            if(selectedVal === "") {
+                extraFields.hide();
+            } else if(selectedVal === "2") {
+                extraFields.html(
+                    '<div class="row">' +
+                    '<div class="col-md-6">' +
+                    '<label for="sheetId-' + offerId + '" class="form-label fw-bold">Sheet ID</label>' +
+                    '<input type="text" class="form-control" id="sheetId-' + offerId + '" name="sheetId">' +
+                    '</div>' +
+                    '<div class="col-md-6">' +
+                    '<label for="tabName-' + offerId + '" class="form-label fw-bold">Название вкладки</label>' +
+                    '<input type="text" class="form-control" id="tabName-' + offerId + '" name="tabName">' +
+                    '</div>' +
+                    '</div>'
+                );
+                extraFields.show();
+            } else {
+                extraFields.html(
+                    '<div class="row">' +
+                    '<div class="col-md-12">' +
+                    '<label for="link-' + offerId + '" class="form-label fw-bold">Ссылка</label>' +
+                    '<input type="text" class="form-control" id="link-' + offerId + '" name="link">' +
+                    '</div>' +
+                    '</div>'
+                );
+                extraFields.show();
+            }
+        });
+
+        if ($('#vacancyId').val() === "0") {
+            var initialData = {};
+            $('#vacancy-card').find('input, textarea, select').each(function() {
+                var id = $(this).attr('id');
+                if (id) {
+                    if ($(this).is(':checkbox')) {
+                        initialData[id] = $(this).prop('checked');
+                    } else {
+                        initialData[id] = $.trim($(this).val());
+                    }
+                }
+            });
+
+            $('#vacancy-card form, #vacancy-openai-card form').on('submit', function(e) {
+                var unchanged = true;
+                $(this).find('input, textarea, select').each(function() {
+                    var id = $(this).attr('id');
+                    if (!id || initialData[id] === undefined) {
+                        return;
+                    }
+                    if ($(this).is(':checkbox')) {
+                        if ($(this).prop('checked') !== initialData[id]) {
+                            unchanged = false;
+                            return false;
+                        }
+                    } else {
+                        if ($.trim($(this).val()) !== initialData[id]) {
+                            unchanged = false;
+                            return false;
+                        }
+                    }
+                });
+                if (unchanged) {
+                    e.preventDefault();
+                    alert("Рекламная компания не изменена. Пожалуйста, внесите изменения перед сохранением.");
+                }
+            });
+        }
+
+        function cleanSpaces(text) {
+            return text.replace(/\s+/g, ' ').trim();
+        }
+
+        function updateVacancyName() {
+            $('.vacancyName').each(function() {
+                var original = $(this).val();
+                var cleaned = cleanSpaces(original);
+                $(this).val(cleaned);
+            });
+        }
+
+        setTimeout(updateVacancyName, 50);
+
+        $(".vacancyName").on('blur', updateVacancyName);
+
+        $("#vacancy-card form, #vacancy-openai-card form").on("submit", function() {
+            updateVacancyName();
+        });
+
+        function initVacancyForm() {
+            if ($('#open-ai-support').is(":checked")) {
+                $("#vacancy-card").addClass("d-none");
+                $("#vacancy-openai-card").removeClass("d-none");
+            } else {
+                $("#vacancy-openai-card").addClass("d-none");
+                $("#vacancy-card").removeClass("d-none");
+            }
+        }
+
+        $('#open-ai-support').on('change', function () {
+            initVacancyForm();
+        });
+
+        initVacancyForm();
+
+        function renderVacancyText() {
+            var vacancyText = $("#vacancy-text").text();
+            if (vacancyText) {
+                var lines = vacancyText.split("\n");
+                var keys = [];
+                var values = [];
+
+                lines.forEach(function(line){
+                    line = line.trim();
+                    if (line && line.indexOf(":") !== -1) {
+                        var parts = line.split(":");
+                        if (parts.length >= 2) {
+                            keys.push(parts[0].trim());
+                            values.push(parts.slice(1).join(":").trim());
+                        }
+                    }
+                });
+
+                if (keys.length > 0) {
+                    var html = '<table class="table table-bordered">';
+                    html += '<thead><tr>';
+                    keys.forEach(function(key) {
+                        html += '<th>' + key + '</th>';
+                    });
+                    html += '</tr></thead>';
+                    html += '<tbody><tr>';
+                    values.forEach(function(value) {
+                        html += '<td>' + value + '</td>';
+                    });
+                    html += '</tr></tbody></table>';
+
+                    // Заполняем таблицей оба контейнера, если они существуют
+                    if ($("#vacancy-view-info").length) {
+                        $("#vacancy-view-info").html(html);
+                    }
+                    if ($("#vacancy-openai-view-info").length) {
+                        $("#vacancy-openai-view-info").html(html);
+                    }
+                }
+            }
+        }
+
+        renderVacancyText();
+    });
+</script>
+{{ end }}
+
+{{ define "content" }}
+<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
+    <h1 class="page-header">Редактирование рекламной компании</h1>
+    {{if .flash.error}}
+    <div class="alert alert-danger" role="alert"><p>{{.flash.error}}</p></div>
+    {{end}}
+
+    {{if .flash.notice}}
+    <div class="alert alert-success" role="alert"><p>{{.flash.notice}}</p></div>
+    {{end}}
+
+    <div class="mb-3">
+        <input type="checkbox" class="form-check-input" id="open-ai-support" {{if .records.OpenAI_Support}}checked{{end}}>
+        <label class="form-check-label fw-bold">OpenAI РК</label>
+    </div>
+
+    <div class="mb-3">
+        <button id="saveAllBtn" class="btn btn-success">
+            Сохранить все
+        </button>
+    </div>
+
+    <div class="card px-3 py-3" id="vacancy-card">
+        <form class="row" method="post" action="/dict/vacancy/update">
+            <input type="hidden" id="vacancyId" name="vacancyId" value="{{.records.Id}}">
+
+            <div class="mb-3">
+                {{if .records.Id}}
+                    {{if and .records.Quest .offers}}
+                        <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" {{if .records.LoadToZp}}checked{{end}}>
+                    {{else}}
+                        <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" disabled>
+                    {{end}}
+                {{else}}
+                    <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" disabled>
+                {{end}}
+                <label class="form-check-label fw-bold" for="LoadToZP">Активная</label>
+            </div>
+
+            {{if .records.Id}}
+            <div class="mb-3">
+            <a class="btn btn-primary"
+               href="/dict/vacancy/edit/0?copyFrom={{.records.Id}}">
+                Копировать
+            </a></div>
+            {{end}}
+
+            <div id="vacancy-view-info" class="mb-3"></div>
+            <div id="vacancy-text" class="d-none">
+                {{.information}}
+            </div>
+
+            {{if .offers }}
+                {{range $v2o := .offers}}
+                    {{if eq $v2o.Offer.Export_type_id 2}}
+                    <div class="mb-3">
+                        <label class="fw-bold">Sheet ID</label>
+                        <input type="text" class="form-control" readonly
+                               value="{{$v2o.Offer.ClientSettings.Sheet_id}}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold">Название вкладки</label>
+                        <input type="text" class="form-control" readonly
+                               value="{{$v2o.Offer.ClientSettings.Sheet_name}}">
+                    </div>
+                    {{else}}
+                    <div class="mb-3">
+                        <label class="fw-bold">Ссылка</label>
+                        <input type="text" class="form-control" readonly
+                               value="{{$v2o.Offer.ClientSettings.Link}}">
+                    </div>
+                    {{end}}
+                {{end}}
+            {{end}}
+
+
+        <div class="mb-3">
+            <label for="vacancyName" class="col-form-label fw-bold">Наименование</label>
+            <div>
+                <input type="text" class="form-control vacancyName" id="vacancyName" name="vacancyName" placeholder="Наименование" value="{{.records.Name}}">
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="vacancyIdAvito" class="col-form-label fw-bold">ID Авито</label>
+            <input type="text" class="form-control" id="vacancyIdAvito" name="vacancyIdAvito" placeholder="ID Авито" value="{{.avito_ids}}">
+            <button formmethod="get" type="submit" class="btn btn-outline-secondary mt-2" formaction="/dict/vacancy/{{.records.Id}}/items">Загрузить из Авито</button>
+        </div>
+
+        {{ if .vacancy_filters }}
+        <br/>
+        <h4>Фильтры</h4>
+        <div class="table-responsive">
+            <table class="table table-default table-sm">
+                <thead>
+                <tr>
+                    <th>Наименование</th>
+                    <th>Значение</th>
+                    <th>Оффер</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range $f := .vacancy_filters}}
+                <tr>
+                    <td>{{$f.Name}}</td>
+                    <td>{{$f.Value}}</td>
+                    <td>{{$f.OfferName}}</td>
+                </tr>
+                {{end}}
+                </tbody>
+            </table>
+        </div>
+        {{ else }}
+        <div class="mt-3 fw-bold">Фильтры не назначены</div><br>
+        {{ end }}
+
+        <div class="mb-3">
+            {{if .records.Quest}}
+            <div class="mb-3">
+                <label class="col-form-label fw-bold">Вопросы</label>
+
+                {{if .vacancy_quest_questions}}
+                <div class="accordion" id="questAccordion">
+                    {{range $qIndex, $q := .vacancy_quest_questions}}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading{{$q.Id}}">
+                            <button class="accordion-button collapsed"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapse{{$q.Id}}"
+                                    aria-expanded="false"
+                                    aria-controls="collapse{{$q.Id}}">
+                                {{$q.Text}}
+                            </button>
+                        </h2>
+                        <div id="collapse{{$q.Id}}"
+                             class="accordion-collapse collapse"
+                             aria-labelledby="heading{{$q.Id}}"
+                             data-bs-parent="#questAccordion">
+                            <div class="accordion-body">
+                                <p><strong>Текст некорректного ответа:</strong> {{$q.WrongAnswerMessages}}</p>
+                                <p><strong>Текст напоминания:</strong> {{$q.FollowUpMessages}}</p>
+                                <p><strong>Тип вопроса:</strong> {{$q.TypeID.Name}}</p>
+                                <p><strong>Обязательный:</strong>
+                                    {{if $q.IsRequired}}Да{{else}}Нет{{end}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <div class="fw-bold">Нет вопросов для данного опросника</div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="mb-3">
+                <div class="fw-bold">Опросник не назначен</div><br>
+            </div>
+            {{end}}
+
+            <div class="mb-3">
+                <label for="helloText" class="col-form-label fw-bold">Текст приветствия</label>
+                <textarea class="form-control" rows="10" id="helloText" name="helloText" style="white-space: pre-wrap;">{{.records.HelloText}}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="byeText" class="col-form-label fw-bold">Текст прощания</label>
+                <textarea class="form-control" rows="10" id="byeText" name="byeText">{{.records.ByeText}}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <input type="checkbox" class="form-check-input" id="enablePostProcessing" name="enablePostProcessing" {{if .records.PostProcessingMessages}}checked{{end}}>
+                <label class="form-check-label fw-bold" for="enablePostProcessing">Post processing messages</label>
+            </div>
+
+            <div class="mb-3" id="postProcessingContainer">
+                <input type="text" class="form-control {{if .records.PostProcessingMessages}}d-none{{end}}" id="postProcessingInput" name="postProcessingMessages" {{if .records.PostProcessingMessages}}disabled{{end}}>
+                <textarea class="form-control {{if not .records.PostProcessingMessages}}d-none{{end}}" rows="10" id="postProcessingMessages" name="postProcessingMessages" {{if not .records.PostProcessingMessages}}disabled{{end}}>{{.records.PostProcessingMessages}}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="dialogLifeTimeInMinutes" class="col-form-label fw-bold">Время жизни диалога в минутах</label>
+                <input type="text" class="form-control" id="dialogLifeTimeInMinutes" name="dialogLifeTimeInMinutes" value="{{.records.DialogLifeTimeInMinutes}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="followUpMessageIntervalInMinutes" class="col-form-label fw-bold">Интервал отправки напоминани о продолжении диалога в минутах</label>
+                <input type="number" class="form-control" id="followUpMessageIntervalInMinutes" name="followUpMessageIntervalInMinutes" value="{{.records.FollowUpMessageIntervalInMinutes}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="countOfMessagesAfterFinishedDialog" class="col-form-label fw-bold">Кол-во сообщений после завершенного диалога</label>
+                <input type="number" class="form-control" id="countOfMessagesAfterFinishedDialog" name="countOfMessagesAfterFinishedDialog" value="{{.countOfMessagesAfterFinishedDialog}}" placeholder="При пустом значении будет использоваться значение по умолчанию">
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" {{if .records.Id | not}}formaction="/dict/vacancy/add"{{end}}>Сохранить</button>
+            </div>
+        </div>
+        </form>
+    </div>
+    <div class="card px-3 py-3 d-none" id="vacancy-openai-card">
+        <form class="row" method="post" action="/dict/vacancy-openai/update">
+            <input type="hidden" id="vacancyId" name="vacancyId" value="{{.records.Id}}">
+
+            <div class="mb-3">
+                {{if .records.Id}}
+                    {{if .offers}}
+                        <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" {{if .records.LoadToZp}}checked{{end}}>
+                    {{else}}
+                        <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" disabled>
+                    {{end}}
+                {{else}}
+                    <input id="LoadToZP" name="LoadToZP" type="checkbox" class="form-check-input" disabled>
+                {{end}}
+                <label class="form-check-label fw-bold" for="LoadToZP">Активная</label>
+            </div>
+
+            {{if and .records.Id .records.OpenAI_Support}}
+            <div class="mb-3">
+                <a class="btn btn-primary"
+                   href="/dict/vacancy/edit/0?copyFrom={{.records.Id}}">
+                    Копировать
+                </a>
+            </div>
+            {{end}}
+
+            <div id="vacancy-openai-view-info" class="mb-3"></div>
+
+            {{if .offers }}
+                {{range $v2o := .offers}}
+                    {{if eq $v2o.Offer.Export_type_id 2}}
+                        <div class="mb-3">
+                            <label class="fw-bold">Sheet ID</label>
+                            <input type="text" class="form-control" readonly
+                                   value="{{$v2o.Offer.ClientSettings.Sheet_id}}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Название вкладки</label>
+                            <input type="text" class="form-control" readonly
+                                   value="{{$v2o.Offer.ClientSettings.Sheet_name}}">
+                        </div>
+                    {{else}}
+                        <div class="mb-3">
+                            <label class="fw-bold">Ссылка</label>
+                            <input type="text" class="form-control" readonly
+                                   value="{{$v2o.Offer.ClientSettings.Link}}">
+                        </div>
+                    {{end}}
+                {{end}}
+            {{end}}
+
+            <div class="mb-3">
+                <label for="vacancyName" class="col-form-label fw-bold">Наименование</label>
+                <div>
+                    <input type="text" class="form-control vacancyName" id="vacancyName" name="vacancyName" placeholder="Наименование" value="{{.records.Name}}">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="vacancyIdAvito" class="col-form-label fw-bold">ID Авито</label>
+                <input type="text" class="form-control" id="vacancyIdAvito" name="vacancyIdAvito" placeholder="ID Авито" value="{{.avito_ids}}">
+                <button formmethod="get" type="submit" class="btn btn-outline-secondary mt-2" formaction="/dict/vacancy/{{.records.Id}}/items">Загрузить из Авито</button>
+            </div>
+
+            {{ if .vacancy_filters }}
+            <br/>
+            <h4>Фильтры</h4>
+            <div class="table-responsive">
+                <table class="table table-default table-sm">
+                    <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Значение</th>
+                        <th>Оффер</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range $f := .vacancy_filters}}
+                    <tr>
+                        <td>{{$f.Name}}</td>
+                        <td>{{$f.Value}}</td>
+                        <td>{{$f.OfferName}}</td>
+                    </tr>
+                    {{end}}
+                    </tbody>
+                </table>
+            </div>
+            {{ else }}
+            <div class="mt-3 fw-bold">Фильтры не назначены</div><br><br>
+            {{ end }}
+
+            <div class="mb-3">
+                <label for="questions" class="col-form-label fw-bold">Вопросы</label>
+                <input type="text" class="form-control" id="questions" name="questions" value="{{.vacancy_avito_openai.Questions}}">
+                <span class="text-secondary">Возможные типы вопросов: fio ; phone ; citizenship ; age ; email ; work_approve ; birthday</span>
+            </div>
+
+            <div class="mb-3">
+                <label for="vacancyDescription" class="col-form-label fw-bold">Описание рекламной компании</label>
+                <textarea class="form-control" rows="15" id="vacancyDescription" name="vacancyDescription">{{.vacancy_avito_openai.VacancyDescription}}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="assistantDescription" class="col-form-label fw-bold">Описание OpenAI ассистента</label>
+                <textarea class="form-control" rows="15" id="assistantDescription" name="assistantDescription">{{.vacancy_avito_openai.AssistantDescription}}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="assistantTemperature" class="col-form-label fw-bold">Temperature OpenAI ассистента</label>
+                <input type="number"
+                       class="form-control"
+                       id="assistantTemperature"
+                       name="assistantTemperature"
+                       min="0"
+                       max="2"
+                       step="0.01"
+                       value="{{.vacancy_avito_openai.AssistantTemperature}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="dialogLifeTimeInMinutes" class="col-form-label fw-bold">Время жизни диалога в минутах</label>
+                <input type="text" class="form-control" id="dialogLifeTimeInMinutes" name="dialogLifeTimeInMinutes" value="{{.records.DialogLifeTimeInMinutes}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="followUpMessageIntervalInMinutes" class="col-form-label fw-bold">Интервал отправки напоминани о продолжении диалога в минутах</label>
+                <input type="number" class="form-control" id="followUpMessageIntervalInMinutes" name="followUpMessageIntervalInMinutes" value="{{.records.FollowUpMessageIntervalInMinutes}}">
+            </div>
+
+            <div class="mb-3">
+                <label for="countOfMessagesAfterFinishedDialog" class="col-form-label fw-bold">Кол-во сообщений после завершенного диалога</label>
+                <input type="number" class="form-control" id="countOfMessagesAfterFinishedDialog" name="countOfMessagesAfterFinishedDialog" value="{{.countOfMessagesAfterFinishedDialog}}" placeholder="При пустом значении будет использоваться значение по умолчанию">
+            </div>
+
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary" {{if .records.Id | not}}formaction="/dict/vacancy-openai/add"{{end}}>Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end }}

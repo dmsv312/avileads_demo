@@ -1,0 +1,194 @@
+/* Сброс стандартных отступов */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%; /* Задаем высоту для всего окна */
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 90%;  /* Контейнер растягивается на всю высоту */
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Блок вывода чата */
+#chatOutput {
+    flex-grow: 1; /* Растягивает область чата на оставшуюся высоту */
+    overflow-y: auto; /* Добавлен скролл */
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+}
+
+#chatOutput p {
+    margin-bottom: 15px;
+}
+
+/* Сообщения */
+#chatOutput .user-message,
+#chatOutput .assistant-message {
+    padding: 10px;
+    border-radius: 8px;
+    margin: 10px 0;
+    max-width: 80%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+#chatOutput .user-message {
+    background-color: #d1e7ff;
+    margin-left: auto;
+    text-align: right;
+}
+
+#chatOutput .assistant-message {
+    background-color: #f1f1f1;
+    margin-right: auto;
+    text-align: left;
+}
+
+/* Поле ввода и кнопка */
+textarea, button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+textarea {
+    height: 80px;
+    resize: none;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Прокрутка */
+#chatOutput {
+    scrollbar-width: thin;
+    scrollbar-color: #ccc transparent;
+}
+
+#chatOutput::-webkit-scrollbar {
+    width: 6px;
+}
+
+#chatOutput::-webkit-scrollbar-thumb {
+    background: #bbb;
+    border-radius: 10px;
+}
+
+/* Markdown-форматирование */
+#chatOutput h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 8px 0;
+    color: #333;
+}
+
+#chatOutput h4 {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 6px 0;
+    color: #555;
+}
+
+#chatOutput b {
+    font-weight: bold;
+    color: #222;
+}
+
+#chatOutput i {
+    font-style: italic;
+    color: #444;
+}
+
+#loader {
+    text-align: center;
+    font-size: 16px;
+    padding: 10px;
+    color: #666;
+}
+
+.hidden {
+    display: none;
+}
+
+.chat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    font-size: 18px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.chat-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-controls input {
+    width: 60px;
+    padding: 5px;
+    font-size: 16px;
+}
+
+.temperature-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+#temperature {
+    width: 60px;
+    text-align: center;
+    border: 1px solid #ccc;
+    padding: 5px;
+    font-size: 16px;
+}
+

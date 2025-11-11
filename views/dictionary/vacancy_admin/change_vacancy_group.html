@@ -1,0 +1,78 @@
+{{ template "dictionary/base/base.html" . }}
+
+{{ define "js" }}
+<script>
+    $(document).ready(function() {
+        $('#changeVacancyGroup').addClass('active');
+
+        $('#change-vacancy-group-form').on('submit', function(event) {
+            event.preventDefault();
+
+            const vacancyGroupId = $('#vacancy-group').val();
+            const avitoIdsStr = $('#avito-vacancy-ids').val();
+
+            if (!vacancyGroupId || !$('#avito-vacancy-ids').val()) {
+                return;
+            }
+
+            const body = { 
+                VacancyGroupId: parseInt(vacancyGroupId),
+                AvitoIds: avitoIdsStr.split(",") 
+            };
+
+            $.ajax({
+                url: '/dict/vacancy/change-vacancy-group',
+                method: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify(body),
+                success: function(response) {
+                    showSuccessOperationToast("Группа вакансий сменилась!");
+                },
+                error: function(error) {
+                    alert('Error:', error);
+                }
+            })
+        });
+
+        $('#avito-vacancy-ids').on('input', function() {
+            const ids = $(this).val();
+            const idsCount = ids == '' ? 0 : ids.split(",").length;
+            $('#avito-vacancy-ids-info').text("Выбрано "+idsCount+" вакансия");
+        });
+    });
+</script>
+{{ end}}
+
+{{ define "content" }}
+<div class="col-sm-9 offset-sm-3 col-md-10 offset-md-2 main">
+    <h1 class="page-header">Смена групп вакансий</h1>
+
+    <div class="w-50" style="min-width: 600px;">
+        <form class="needs-validation" id="change-vacancy-group-form" novalidate>
+            <div class="mb-3 has-validation">
+                <label class="col-form-label fw-bold">Группа вакансий</label>
+                <select class="form-select" id="vacancy-group" required>
+                    <option selected></option>
+                    {{range $item := $.vacancyGroups}}
+                        <option value="{{$item.Id}}">{{$item.Id}} : {{$item.Name}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div class="mb-3 has-validation">
+                <label class="col-form-label fw-bold">Avito вакансии</label>
+                <textarea
+                    id="avito-vacancy-ids" 
+                    class="form-control" 
+                    rows="10" id="avitoIds" 
+                    style="white-space: pre-wrap;" 
+                    placeholder="Список Avito id вакансий через запятую"
+                    required></textarea>
+                <span id="avito-vacancy-ids-info">Выбрано 0 вакансий</span>
+            </div>
+            <div class="text-end">
+                <button type="submit" class="btn btn-primary" id="change-vacancy-group-btn">Сменить</button>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end}}

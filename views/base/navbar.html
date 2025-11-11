@@ -1,0 +1,107 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">Avileads</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item dropdown" id="dict-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Справочники
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink" id="dict-dropdown-menu">
+                    {{if hasAccess "/dict/vacancy" .userRules}} 
+                    <li><a class="dropdown-item" href="/dict/vacancy">Вакансии</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/vacancy_admin" .userRules}}
+                    <li><a class="dropdown-item" href="/dict/vacancy_admin">Рекламные кампании</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/questionnaire" .userRules}} 
+                    <li><a class="dropdown-item" href="/dict/questionnaire">Опросники</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/avitokeys" .userRules}} 
+                    <li><a class="dropdown-item" href="/dict/avitokeys">Ключи Авито</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/offers/settings" .userRules}} 
+                    <li><a class="dropdown-item" href="/dict/offers/settings">Настройка офферов</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/offers" .userRules}}
+                    <li><a class="dropdown-item" href="/dict/offers">Редактирование офферов</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/vacancy/change-group" .userRules}}
+                    <li><a class="dropdown-item" href="/dict/vacancy/change-group">Смена групп вакансий</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/limits" .userRules}}
+                    <li><a class="dropdown-item" href="/dict/limits">Лимиты</a></li>
+                    {{end}}
+                    {{if hasAccess "/dict/dialogs-reactivations" .userRules}}
+                    <li><a class="dropdown-item" href="/dict/dialogs-reactivations">Реактивации диалогов</a></li>
+                    {{end}}
+                </ul>
+            </li>
+            {{if hasAccess "/chatcenter" .userRules}} 
+            <li class="nav-item">
+                <a class="nav-link" href="/chatcenter">Чат центр</a>
+            </li>
+            {{end}}
+            {{if hasAccess "/open-ai" .userRules}}
+            <li class="nav-item">
+                <a class="nav-link" href="/open-ai-home">ChatGPT</a>
+            </li>
+            {{end}}
+            {{if hasAccess "/randomizer" .userRules}}
+            <li class="nav-item dropdown" id="dict-dropdown2">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Бронирования
+                </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenu" id="dict-dropdown-menu-2">
+                <li><a class="dropdown-item" href="/booking/create">Забронировать</a></li>
+                <li><a class="dropdown-item" href="/booking/manage">Управлять</a></li>
+                <li><a class="dropdown-item" href="/booking/directory">Справочник</a></li>
+            </ul>
+            </li>
+            {{end}}
+            {{if hasAccess "/randomizer" .userRules}}
+            <li class="nav-item">
+                <a class="nav-link" href="/randomizer-home">Рандомизатор</a>
+            </li>
+            {{end}}
+            {{if hasAccess "/dialogs-reactivation/avito" .userRules}} 
+            <li class="nav-item">
+                <a class="nav-link" href="/dialogs-reactivation/avito">Реактивация диалогов</a>
+            </li>
+            {{end}}
+            {{if hasAccess "/data/leads" .userRules}} 
+            <li class="nav-item">
+                <a class="nav-link" href="/data/leads">Нормализованные данные</a>
+            </li>
+            {{end}}
+            {{if hasAccess "/analytics/state" .userRules}} 
+            <li class="nav-item">
+                <a class="nav-link" href="/analytics/state">Аналитика</a>
+            </li>
+            {{end}}
+            <li class="nav-item dropdown" id="admin-dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="adminDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Администрирование
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="adminDropdownMenuLink" id="admin-dropdown-menu">
+                    {{if hasAccess "/admin/users" .userRules}} 
+                    <li><a class="dropdown-item" href="/admin/users">Пользователи</a></li>
+                    {{end}}
+                    {{if hasAccess "/admin/roles" .userRules}}
+                    <li><a class="dropdown-item" href="/admin/roles">Роли</a></li>
+                    {{end}}
+                    {{if hasAccess "/admin/avito-chats-loading" .userRules}}
+                    <li><a class="dropdown-item" href="/admin/avito-chats-loading">Загрузка сообщений Avito</a></li>
+                    {{end}}
+                </ul>
+            </li>
+        </ul>
+        <span class="navbar-text me-2">{{.userName}}</span>
+        <a href="/logout" class="btn btn-outline-light me-2" {{.logout}}>Выйти</a>
+        <a href="/login" class="btn btn-outline-light" {{.login}}>Войти</a>
+        </div>
+    </div>
+</nav>
